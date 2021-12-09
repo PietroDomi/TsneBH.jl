@@ -1,0 +1,7 @@
+name = "TsneBH"
+uuid = "525ddba7-3bae-4de4-b448-e3f026cc94e0"
+authors = ["Pietro <pietro.dominietto@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
