@@ -70,13 +70,17 @@ function cond_gauss(data::Matrix{Float64};sigma::Float64=1.0)
     prob, exp_mat
 end
 
-function eu_dist(data::Array{Float64,2})
+function eu_dist(data::Matrix{Float64})
     dist_mat2 = zeros(size(data)[1],size(data)[1])
     for i in 1:size(data)[1], j in i:size(data)[1]
         dist_mat2[i,j] = sum((data[i,:] - data[j,:]).^2)
         dist_mat2[j,i] = dist_mat2[i,j]
     end
     dist_mat2
+end
+
+function random_start(sample_size::Int,dim::Int;normal::Bool=false)
+    normal ? randn(sample_size,dim) : rand(sample_size,dim)
 end
 
 end # module
