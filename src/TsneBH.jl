@@ -3,10 +3,15 @@ module TsneBH
 export tsne
 
 using LinearAlgebra
+using Statistics
 
-function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,max_iter::Int=50,verbose::Bool=true)
+function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
+                lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,
+                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,verbose::Bool=true)
     # Create an initial random embedding
     Y = randn(size(X)[1],emb_size)
+    # Perform PCA if selected
+    pca && (X = PCA(X,pca_dim))
     # Search for the sigmas of the Gaussians
     P, sigma = binary_search(X,perp,tol,max_iter,v=verbose)
     # Start the iteration
@@ -41,6 +46,16 @@ function grad_KL(P::Matrix{Float64},data_red::Matrix{Float64},q_distr::Matrix{Fl
         dy[i,:] = sum(repeat(PQ[:,i] .* num[:,i],1,size(data_red)[2]) .* (transpose(data_red[i,:]) .- data_red),dims=1)
     end
     dy
+end
+
+function PCA(data::Matrix{Float64},dims::Int)
+    N, d = size(data)
+    N < dims && throw(ArgumentError("PCA dimensions must be less than $N, chosen: $dims")) 
+    println("Reducing with PCA to $dims dims")
+    data_std = data - repeat(mean(data,dims=1),N,1)
+    e, v = eigen(transpose(data_std) * data_std);
+    v = v[:,sortperm(e,rev=true)]
+    Y = data_std * v[:,1:dims]
 end
 
 function H_sigma(D::Vector{Float64},sigma::Float64)
