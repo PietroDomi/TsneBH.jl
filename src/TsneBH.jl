@@ -4,10 +4,22 @@ export tsne
 
 using LinearAlgebra
 using Statistics
+using Random
+
+"""
+tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
+                lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,
+                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,
+                seed::Bool=false,verbose::Bool=true)
+"""
 
 function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
                 lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,
-                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,verbose::Bool=true)
+                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,exag_fact::Float64=4.,
+                use_seed::Bool=false,verbose::Bool=true)
+    if use_seed
+        Random.seed!(1234)
+    end
     # Create an initial random embedding
     Y = randn(size(X)[1],emb_size)
     # Perform PCA if selected
@@ -15,26 +27,44 @@ function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
     # Search for the sigmas of the Gaussians
     P, sigma = binary_search(X,perp,tol,max_iter,v=verbose)
     # Start the iteration
-    Y_new = gradient_descent(T,P,Y,lr,v=true)
+    Y_new = gradient_descent(T,P,Y,lr,exag_fact,v=true)
 end
 
-function gradient_descent(T::Int64,P::Matrix{Float64},data_red::Matrix{Float64},lr::Float64;v::Bool)
+function gradient_descent(T::Int64,P::Matrix{Float64},data_red::Matrix{Float64},
+                            lr::Float64,exag_fact::Float64;v::Bool,tol::Float64=2e-3)
     # Start iterating
     dr = copy(data_red)
+    # Early exaggeration
+    P = P * exag_fact
+    t = 0
+    delta_C = Inf
+    q_distr, num = cond_t(dr)
+    # Initial cost
+    C = cost_KL(P,q_distr)
     println("Beginning gradient descent...")
-    for t in 1:T
-        # Compute gradient
-        q_distr, num = cond_t(dr)
+    while t < T && delta_C > tol
         size(P) != size(q_distr) && throw(ArgumentError("sizes don't match"))
+        # Compute gradient
         dy = grad_KL(P,dr,q_distr,num)
         # Update values
         dr = dr - lr * dy
-        # Compute loss
-        if v && t % 10 == 0
-            println("t=$t, C=$(cost_KL(P,q_distr))")
-        end
         # Center in zero
         dr = dr - repeat(sum(dr,dims=1)/size(dr)[1],size(dr)[1],1)
+        # Compute loss
+        q_distr, num = cond_t(dr)
+        C_t = cost_KL(P,q_distr)
+        # update iteration
+        t += 1
+        delta_C = abs(C-C_t)
+        C = C_t
+        if t == 100
+            # Stop exaggeration
+            P = P / exag_fact
+            println("Stop exaggerating...")
+        end
+        if v && t % 10 == 0
+            println("t=$t, C=$C_t, ΔC=$delta_C, dy=[min=$(minimum(dy)),max=$(maximum(dy))]")
+        end
     end
     dr
 end
@@ -74,7 +104,7 @@ function binary_search(data::Matrix{Float64},perp::Float64,tol::Float64,max_iter
     D = transpose(-2. * data * transpose(data) .+ sum_x) .+ sum_x
     log_perp = log(perp)
     for i in 1:N
-        if v && i % 10 == 0
+        if v && i % 100 == 0
             println("Perplexity search $i / $N")
         end
         sigma_low = -Inf
