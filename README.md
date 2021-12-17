@@ -4,7 +4,7 @@ Implementation of the t-sne dimensionality reduction technique by [Laurens van d
 
 ## Main function documentation
 
-```
+```julia
 tsne(X::Matrix{Float64}, emb_size::Int64, T::Int64;
         lr::Float64 = 1., perp::Float64 = 30., tol::Float64 = 1e-5,
         max_iter::Int = 50,  momentum::Float64 = 0.01, 
