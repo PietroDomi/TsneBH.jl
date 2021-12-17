@@ -1,8 +1,24 @@
 # TsneBH.jl
 
-Implementation of the t-sne dimensionality reduction technique, with an extension using the Barnes-Hut approximation.
+Implementation of the t-sne dimensionality reduction technique by [Laurens van der Maaten](https://lvdmaaten.github.io/tsne/), with an extension using the Barnes-Hut approximation.
 
-## Getting started
+## Main function documentation
+
+```
+tsne(X::Matrix{Float64}, emb_size::Int64, T::Int64;
+        lr::Float64 = 1., perp::Float64 = 30., tol::Float64 = 1e-5,
+        max_iter::Int = 50,  momentum::Float64 = 0.01, 
+        pca::Bool = true, pca_dim::Int = 50, exag_fact::Float64 = 4.,
+        use_seed::Bool = false, verbose::Bool = true)
+```
+
+## References
+
+- L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008.
+- L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245, 2014.
+- [lvdmaaten.github.io/tsne](https://lvdmaaten.github.io/tsne/)
+
+<!-- ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
 
@@ -90,4 +106,4 @@ For open source projects, say how it is licensed.
 
 ## Project status
 If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
-
+ -->
