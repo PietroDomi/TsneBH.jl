@@ -15,7 +15,8 @@ tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
 
 function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
                 lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,
-                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,exag_fact::Float64=4.,
+                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,
+                exag_fact::Float64=4.,momentum=0.01,
                 use_seed::Bool=false,verbose::Bool=true)
     if use_seed
         Random.seed!(1234)
@@ -27,27 +28,31 @@ function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
     # Search for the sigmas of the Gaussians
     P, sigma = binary_search(X,perp,tol,max_iter,v=verbose)
     # Start the iteration
-    Y_new = gradient_descent(T,P,Y,lr,exag_fact,v=true)
+    Y_new = gradient_descent(T,P,Y,lr,exag_fact,v=true,tol=tol,momentum=momentum)
 end
 
 function gradient_descent(T::Int64,P::Matrix{Float64},data_red::Matrix{Float64},
-                            lr::Float64,exag_fact::Float64;v::Bool,tol::Float64=2e-3)
-    # Start iterating
+                            lr::Float64,exag_fact::Float64;v::Bool,tol::Float64,
+                            momentum::Float64)
+    # Parameters
     dr = copy(data_red)
-    # Early exaggeration
-    P = P * exag_fact
+    dy_m = zeros(size(dr)) 
     t = 0
     delta_C = Inf
+    dy = Inf
+    # Early exaggeration
+    P = P * exag_fact
     q_distr, num = cond_t(dr)
     # Initial cost
     C = cost_KL(P,q_distr)
     println("Beginning gradient descent...")
-    while t < T && delta_C > tol
+    while t < T && delta_C > tol && maximum(dy) > 1e-2
         size(P) != size(q_distr) && throw(ArgumentError("sizes don't match"))
         # Compute gradient
         dy = grad_KL(P,dr,q_distr,num)
         # Update values
-        dr = dr - lr * dy
+        dy_m = dy_m * momentum - lr * dy
+        dr = dr - dy_m
         # Center in zero
         dr = dr - repeat(sum(dr,dims=1)/size(dr)[1],size(dr)[1],1)
         # Compute loss
@@ -57,13 +62,13 @@ function gradient_descent(T::Int64,P::Matrix{Float64},data_red::Matrix{Float64},
         t += 1
         delta_C = abs(C-C_t)
         C = C_t
-        if t == 100
+        if v && t % 10 == 0
+            println("t=$t, C=$C_t, ΔC=$delta_C, min(dy)=$(minimum(dy)), max(dy)=$(maximum(dy))")
+        end
+        if t == 200
             # Stop exaggeration
             P = P / exag_fact
             println("Stop exaggerating...")
-        end
-        if v && t % 10 == 0
-            println("t=$t, C=$C_t, ΔC=$delta_C, dy=[min=$(minimum(dy)),max=$(maximum(dy))]")
         end
     end
     dr
