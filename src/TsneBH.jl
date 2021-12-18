@@ -1,23 +1,26 @@
 module TsneBH
 
-export tsne
+export tsne, random_start
 
 using LinearAlgebra
 using Statistics
 using Random
 
 """
-tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
-                lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,
-                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,
-                seed::Bool=false,verbose::Bool=true)
+tsne(X::Matrix{Float64}, emb_size::Int64, T::Int64;
+        lr::Float64 = 1., perp::Float64 = 30., tol::Float64 = 1e-5,
+        max_iter::Int = 50,  momentum::Float64 = 0.01, 
+        pca::Bool = true, pca_dim::Int = 50, exag_fact::Float64 = 4.,
+        use_seed::Bool = false, verbose::Bool = true)
+
+    
 """
 
-function tsne(X::Matrix{Float64},emb_size::Int64,T::Int64;
-                lr::Float64=1.,perp::Float64=30.,tol::Float64=1e-5,
-                max_iter::Int=50,pca::Bool=true,pca_dim::Int=50,
-                exag_fact::Float64=4.,momentum=0.01,
-                use_seed::Bool=false,verbose::Bool=true)
+function tsne(X::Matrix{Float64}, emb_size::Int64, T::Int64;
+                lr::Float64 = 1., perp::Float64 = 30., tol::Float64 = 1e-5,
+                max_iter::Int = 50,  momentum::Float64 = 0.01, 
+                pca::Bool = true, pca_dim::Int = 50, exag_fact::Float64 = 4.,
+                use_seed::Bool = false, verbose::Bool = true)
     if use_seed
         Random.seed!(1234)
     end
@@ -186,6 +189,8 @@ function eu_dist(data::Matrix{Float64})
     end
     dist_mat2
 end
+
+eu_dist(x::Vector{Float64},y::Vector{Float64}) = sqrt(sum((x-y).^2))
 
 function random_start(sample_size::Int,dim::Int;normal::Bool=false,seed::Bool=false)
     if seed
