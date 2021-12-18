@@ -5,7 +5,7 @@ X_dim = 100
 Y_dim = 2
 
 # X = randn(N,X_dim);
-X = TsneBH.random_start(N,X_dim,normal=true,seed=true)
+X = random_start(N,X_dim,normal=true,seed=true)
 
 Y = tsne(X,Y_dim,2000;
          lr=1e-5,tol=5e-4,verbose=true,
