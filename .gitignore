@@ -26,4 +26,6 @@ docs/site/
 #### PROJECT SPECIFIC
 ## DATA
 isolet/
+.vscode/
+examples/tsne_drafts*
 
