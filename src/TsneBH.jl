@@ -15,8 +15,8 @@ tsne(X::Matrix{Float64}, emb_size::Int64, T::Int64;
                 lr::Float64 = 1., perp::Float64 = 30., tol::Float64 = 1e-5,
                 max_iter::Int = 50,  momentum::Float64 = 0.01, 
                 pca::Bool = true, pca_dim::Int = 50, exag_fact::Float64 = 4.,
-                use_trees::Bool = true, theta_bh::Float64 = 0.2,
-                use_seed::Bool = false, verbose::Bool = true)
+                use_trees::Bool = false, ### The BarnesHut algorithm is currently instable, there's a problem with the recursion
+                theta_bh::Float64 = 0.2, use_seed::Bool = false, verbose::Bool = true)
 
     
 """
