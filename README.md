@@ -1,6 +1,17 @@
 # TsneBH.jl
 
-Implementation of the t-sne dimensionality reduction technique by [Laurens van der Maaten](https://lvdmaaten.github.io/tsne/), with an extension using the Barnes-Hut approximation.
+The purpose of this module is to implement the T-SNE dimensionality reduction technique developed by [Laurens van der Maaten](https://lvdmaaten.github.io/tsne/). This technique is a stochastic algorithm that allows for the reduction of the dimensions from the original space, while trying to maintain intact the relationships among points in the reduced space, especially the nearest neighbors.
+
+T-SNE itself is an extension of SNE technique, introducing the use of the t-distribution in the embedded space instead of the Gaussian and a new way to compute the gradient.
+
+Essentially using T-SNE is solving an optimization problem, where the objective function is the KL divergence between the distributions of points in the original space (loosely speaking) and the ones in the reduced space. Ideally we'd like to minimize this cost, as to make the two distributions as similar as possible. The optimization is done through a gradient descent algorithm.
+
+### Trees extension
+
+An evolution of T-SNE is to accelerate the computations by means of two tree-based algorithms: Vantage Point trees and the Barnes-Hut. The first one is a clever way to map the space of points and to quickly retrieve which are the nearest neighbors of a given point. The second one, with the use of QuadTrees, is also a way to map the space of points but with the purpose of speeding up the computation of any interaction among them (in our case the gradient).
+
+They are implemented in the `trees.jl` file, but as of now the BarnesHut functions are not stable and might give an Overflow error.
+
 
 ## Main function documentation
 
@@ -11,6 +22,18 @@ tsne(X::Matrix{Float64}, emb_size::Int64, T::Int64;
                 pca::Bool = true, pca_dim::Int = 50, exag_fact::Float64 = 4.,
                 use_trees::Bool = false, ### The BarnesHut algorithm is currently instable, there's a problem with the recursion
                 theta_bh::Float64 = 0.2, use_seed::Bool = false, verbose::Bool = true)
+```
+
+## Quick RunC
+Clone the repo, then `cd` into it. You can run a simple example(after isntantiating the packages):
+
+```julia
+julia --project=. ./examples/tsne_run.jl
+```
+Otherwise you can open `julia --project=.` and do
+```julia
+using TsneBH
+tsne(...) # follow the documentation above
 ```
 
 ## References
