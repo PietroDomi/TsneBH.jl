@@ -24,7 +24,9 @@ function gradient_descent(T::Int64, P::Matrix{Float64}, data_red::Matrix{Float64
     while t < T && delta_C > tol && maximum(dy) > 1e-2
         size(P) != size(q_distr) && throw(ArgumentError("sizes don't match"))
         # Compute gradient
+        global t = 0 # create recursion check
         dy = use_trees ? gradient_trees(dr, P_joint, neighbors, theta=theta) : grad_KL(P,dr,q_distr,num)
+        global t = 0 # reset recursion check
         # Update values
         dy_m = dy_m * momentum - lr * dy
         dr = dr - dy_m
@@ -60,7 +62,7 @@ end
 
 function PCA(data::Matrix{Float64}, dims::Int)
     N, d = size(data)
-    N < dims && throw(ArgumentError("PCA dimensions must be less than $N, chosen: $dims")) 
+    N < dims && throw(ArgumentError("PCA dimensions must be less than $d, chosen: $dims")) 
     println("Reducing with PCA to $dims dims")
     data_std = data - repeat(mean(data, dims=1), N, 1)
     e, v = eigen(transpose(data_std) * data_std);

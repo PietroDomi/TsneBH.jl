@@ -173,8 +173,6 @@ function update_node!(node::NodeQT, point::Vector{Float64})
     node.data = push!(node.data,point)
 end
 
-global t = 0
-
 function build_QTree(root::Union{Nothing,NodeQT}, data_::Union{Vector{Vector{Float64}},Matrix{Float64}})
     isnothing(root) && (root = create_root(data_))
     N = typeof(data_) == Matrix{Float64} ? size(data_)[1] : length(data_)
@@ -182,6 +180,7 @@ function build_QTree(root::Union{Nothing,NodeQT}, data_::Union{Vector{Vector{Flo
     # Loop on every point
     for i in 1:N
         if t > 1000
+            global t = 0
             throw(OverflowError("There's a problem with the recursion"))
         end
         p = typeof(data_) == Matrix{Float64} ? data_[i,:] : data_[i]
